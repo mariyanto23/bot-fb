@@ -31,6 +31,8 @@ final class FacebookService
             'body_size' => strlen((string) $response['body']),
             'link_count' => 0,
             'candidate_count' => 0,
+            'page_hint' => $this->pageHint($response['body']),
+            'sample_links' => [],
             'sample_candidates' => [],
         ];
 
@@ -145,7 +147,13 @@ final class FacebookService
         $needle = strtolower($html);
         return str_contains($needle, 'name="email"')
             && str_contains($needle, 'name="pass"')
-            && (str_contains($needle, 'login') || str_contains($needle, 'checkpoint'));
+            && (
+                str_contains($needle, 'login')
+                || str_contains($needle, 'masuk')
+                || str_contains($needle, 'checkpoint')
+                || str_contains($needle, 'm_login_email')
+                || str_contains($needle, '/login.php')
+            );
     }
 
     private function looksCheckpoint(string $html): bool
@@ -171,6 +179,13 @@ final class FacebookService
 
         foreach ($links as $link) {
             $href = html_entity_decode((string) $link->getAttribute('href'));
+            if ($href !== '' && count($this->lastFetchDebug['sample_links']) < 12) {
+                $this->lastFetchDebug['sample_links'][] = [
+                    'text' => mb_substr(trim(preg_replace('/\s+/', ' ', $link->textContent)), 0, 80),
+                    'href' => mb_substr($href, 0, 240),
+                ];
+            }
+
             if (!$this->isPostUrl($href)) {
                 continue;
             }
@@ -236,6 +251,35 @@ final class FacebookService
         }
 
         return null;
+    }
+
+    private function pageHint(string $html): string
+    {
+        $plain = strtolower(trim(preg_replace('/\s+/', ' ', strip_tags($html))));
+
+        if ($this->looksCheckpoint($html)) {
+            return 'checkpoint';
+        }
+
+        if ($this->looksLoggedOut($html)) {
+            return 'login';
+        }
+
+        foreach ([
+            'gabung ke grup' => 'join_group',
+            'join group' => 'join_group',
+            'konten ini tidak tersedia' => 'content_unavailable',
+            'content is not available' => 'content_unavailable',
+            'anda harus masuk' => 'login_required',
+            'you must log in' => 'login_required',
+            'tidak dapat menampilkan' => 'cannot_display',
+        ] as $needle => $hint) {
+            if (str_contains($plain, $needle)) {
+                return $hint;
+            }
+        }
+
+        return 'unknown';
     }
 
     private function absoluteUrl(string $href, string $host): string
