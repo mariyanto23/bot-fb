@@ -16,16 +16,34 @@
                 <th>Status</th>
                 <th>Post</th>
                 <th>Message</th>
+                <th>Context</th>
             </tr>
             </thead>
             <tbody>
             <?php foreach ($logs as $log): ?>
+                <?php
+                $context = '';
+                if (!empty($log['context'])) {
+                    $decoded = json_decode((string) $log['context'], true);
+                    $context = json_encode($decoded ?: $log['context'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                }
+                ?>
                 <tr>
                     <td><?= e($log['created_at']) ?></td>
                     <td><span class="badge text-bg-secondary"><?= e($log['level']) ?></span></td>
                     <td><?= e($log['status']) ?></td>
                     <td><?= e($log['related_post_id'] ?? '-') ?></td>
                     <td class="table-long"><?= e($log['message']) ?></td>
+                    <td class="table-long">
+                        <?php if ($context !== ''): ?>
+                            <details>
+                                <summary>Detail</summary>
+                                <pre class="log-context"><?= e($context) ?></pre>
+                            </details>
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

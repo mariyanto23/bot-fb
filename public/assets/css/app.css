@@ -73,6 +73,21 @@ body {
     overflow-wrap: anywhere;
 }
 
+.log-context {
+    max-width: 640px;
+    max-height: 260px;
+    margin: 10px 0 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 12px;
+    color: #d7dee7;
+    background: #101418;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 6px;
+    padding: 12px;
+}
+
 .nav-link.active {
     color: #8ec5ff !important;
 }
