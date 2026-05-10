@@ -1,8 +1,4 @@
-CREATE DATABASE IF NOT EXISTS `fb_comment_bot`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
 
-USE `fb_comment_bot`;
 
 CREATE TABLE `admins` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

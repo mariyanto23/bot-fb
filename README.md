@@ -7,12 +7,20 @@ Native PHP 8 MVC dashboard for Facebook affiliate comment automation, Telegram n
 1. Upload the project and point the domain document root to `public/`.
 2. Copy `.env.example` to `.env` and fill database, app URL, bot, and Telegram values.
 3. Import `database.sql` into MySQL.
-4. Run `composer install --no-dev --optimize-autoloader` when Composer is available.
-5. Create an admin:
+4. Composer is optional. The app includes a fallback autoloader for cPanel hosting without Composer.
+5. Create an admin from cPanel Terminal when available:
 
 ```bash
 php cron/create_admin.php admin@example.com strong-password
 ```
+
+If cPanel Terminal is not available, set `INSTALL_ADMIN_TOKEN` in `.env` to a long random string, then open:
+
+```text
+https://your-domain.com/install_admin.php?token=your-long-random-string
+```
+
+Create the admin, then immediately delete `public/install_admin.php` or clear `INSTALL_ADMIN_TOKEN`.
 
 ## Cron
 
