@@ -40,18 +40,37 @@ final class CommentService
         foreach ($this->targets->active() as $target) {
             try {
                 $items = $this->facebook->fetchPostsFromTarget($target);
+                $targetCreated = 0;
+                $targetSkipped = 0;
+
                 foreach ($items as $item) {
                     if ($this->posts->existsByHash($item['post_hash'])) {
                         $skipped++;
+                        $targetSkipped++;
                         continue;
                     }
 
                     $item['target_group_id'] = (int) $target['id'];
                     $this->posts->create($item);
                     $created++;
+                    $targetCreated++;
                 }
                 $this->targets->touchFetched((int) $target['id']);
-                $this->logger->info('fetch_posts', 'Fetched posts from ' . $target['name'], null, ['created' => $created, 'skipped' => $skipped]);
+
+                if ($items === []) {
+                    $this->logger->warning('fetch_posts_empty', 'Tidak ada link post yang dikenali dari target ' . $target['name'], null, [
+                        'target_id' => $target['id'],
+                        'source_url' => $target['source_url'],
+                    ]);
+                    continue;
+                }
+
+                $this->logger->info('fetch_posts', 'Fetched posts from ' . $target['name'], null, [
+                    'target_id' => $target['id'],
+                    'found' => count($items),
+                    'created' => $targetCreated,
+                    'skipped' => $targetSkipped,
+                ]);
             } catch (\Throwable $exception) {
                 $this->logger->error('fetch_posts_failed', $exception->getMessage(), null, ['target_id' => $target['id']]);
             }

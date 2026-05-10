@@ -149,7 +149,8 @@ final class FacebookService
         $dom->loadHTML($html);
         $links = $dom->getElementsByTagName('a');
         $base = parse_url($sourceUrl);
-        $host = ($base['scheme'] ?? 'https') . '://' . ($base['host'] ?? parse_url((string) config('config.facebook.base_url'), PHP_URL_HOST));
+        $fallbackHost = parse_url($this->settings->string('facebook_base_url', config('config.facebook.base_url')), PHP_URL_HOST);
+        $host = ($base['scheme'] ?? 'https') . '://' . ($base['host'] ?? $fallbackHost);
 
         foreach ($links as $link) {
             $href = html_entity_decode((string) $link->getAttribute('href'));
@@ -157,12 +158,12 @@ final class FacebookService
                 continue;
             }
 
-            $absolute = str_starts_with($href, 'http') ? $href : rtrim($host, '/') . '/' . ltrim($href, '/');
             $postId = $this->extractPostId($href);
             if ($postId === null) {
                 continue;
             }
 
+            $absolute = $this->absoluteUrl($href, $host);
             $posts[$postId] = [
                 'facebook_post_id' => $postId,
                 'post_url' => $absolute,
@@ -178,29 +179,54 @@ final class FacebookService
 
     private function isPostUrl(string $href): bool
     {
+        $href = strtolower(html_entity_decode($href));
+
         return str_contains($href, 'story_fbid=')
+            || str_contains($href, 'multi_permalinks=')
+            || str_contains($href, 'ft_ent_identifier=')
             || str_contains($href, '/posts/')
             || str_contains($href, '/permalink/')
-            || str_contains($href, 'multi_permalinks=');
+            || str_contains($href, '/permalink.php')
+            || str_contains($href, '/story.php')
+            || str_contains($href, '/photo.php')
+            || preg_match('~/groups/[^/?#]+/(?:posts|permalink)/[^/?#]+~', $href) === 1;
     }
 
     private function extractPostId(string $href): ?string
     {
+        $href = html_entity_decode($href);
         $query = parse_url($href, PHP_URL_QUERY);
         if (is_string($query)) {
             parse_str(html_entity_decode($query), $params);
-            foreach (['story_fbid', 'multi_permalinks', 'fbid'] as $key) {
+            foreach (['story_fbid', 'multi_permalinks', 'fbid', 'ft_ent_identifier', 'id'] as $key) {
                 if (!empty($params[$key])) {
                     return preg_replace('/[^0-9A-Za-z_\-]/', '', (string) $params[$key]);
                 }
             }
         }
 
-        if (preg_match('~/posts/([^/?#]+)~', $href, $matches) || preg_match('~/permalink/([^/?#]+)~', $href, $matches)) {
+        if (
+            preg_match('~/posts/([^/?#]+)~', $href, $matches)
+            || preg_match('~/permalink/([^/?#]+)~', $href, $matches)
+            || preg_match('~/groups/[^/?#]+/(?:posts|permalink)/([^/?#]+)~', $href, $matches)
+        ) {
             return preg_replace('/[^0-9A-Za-z_\-]/', '', $matches[1]);
         }
 
         return null;
+    }
+
+    private function absoluteUrl(string $href, string $host): string
+    {
+        if (str_starts_with($href, 'http://') || str_starts_with($href, 'https://')) {
+            return $href;
+        }
+
+        if (str_starts_with($href, '//')) {
+            return 'https:' . $href;
+        }
+
+        return rtrim($host, '/') . '/' . ltrim($href, '/');
     }
 
     private function extractCommentForm(string $html): ?array
