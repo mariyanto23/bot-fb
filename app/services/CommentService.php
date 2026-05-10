@@ -61,6 +61,7 @@ final class CommentService
                     $this->logger->warning('fetch_posts_empty', 'Tidak ada link post yang dikenali dari target ' . $target['name'], null, [
                         'target_id' => $target['id'],
                         'source_url' => $target['source_url'],
+                        'debug' => $this->facebook->lastFetchDebug(),
                     ]);
                     continue;
                 }
@@ -70,6 +71,7 @@ final class CommentService
                     'found' => count($items),
                     'created' => $targetCreated,
                     'skipped' => $targetSkipped,
+                    'debug' => $this->facebook->lastFetchDebug(),
                 ]);
             } catch (\Throwable $exception) {
                 $this->logger->error('fetch_posts_failed', $exception->getMessage(), null, ['target_id' => $target['id']]);

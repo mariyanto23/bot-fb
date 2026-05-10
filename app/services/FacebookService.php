@@ -6,6 +6,8 @@ use App\helpers\CurlHelper;
 
 final class FacebookService
 {
+    private array $lastFetchDebug = [];
+
     public function __construct(
         private ?CookieService $cookies = null,
         private ?RandomizerService $randomizer = null,
@@ -23,6 +25,15 @@ final class FacebookService
             'user_agent' => $this->randomizer->userAgent(),
         ]);
 
+        $this->lastFetchDebug = [
+            'http_status' => $response['status'],
+            'effective_url' => $response['info']['url'] ?? $target['source_url'],
+            'body_size' => strlen((string) $response['body']),
+            'link_count' => 0,
+            'candidate_count' => 0,
+            'sample_candidates' => [],
+        ];
+
         if (!$response['ok']) {
             throw new \RuntimeException('Facebook fetch failed: ' . ($response['error'] ?: 'HTTP ' . $response['status']));
         }
@@ -32,6 +43,11 @@ final class FacebookService
         }
 
         return $this->extractPosts($response['body'], (string) $target['source_url']);
+    }
+
+    public function lastFetchDebug(): array
+    {
+        return $this->lastFetchDebug;
     }
 
     public function sendComment(array $post, string $commentBody): array
@@ -151,11 +167,17 @@ final class FacebookService
         $base = parse_url($sourceUrl);
         $fallbackHost = parse_url($this->settings->string('facebook_base_url', config('config.facebook.base_url')), PHP_URL_HOST);
         $host = ($base['scheme'] ?? 'https') . '://' . ($base['host'] ?? $fallbackHost);
+        $this->lastFetchDebug['link_count'] = $links->length;
 
         foreach ($links as $link) {
             $href = html_entity_decode((string) $link->getAttribute('href'));
             if (!$this->isPostUrl($href)) {
                 continue;
+            }
+
+            $this->lastFetchDebug['candidate_count']++;
+            if (count($this->lastFetchDebug['sample_candidates']) < 5) {
+                $this->lastFetchDebug['sample_candidates'][] = mb_substr($href, 0, 240);
             }
 
             $postId = $this->extractPostId($href);
