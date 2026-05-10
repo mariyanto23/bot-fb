@@ -76,12 +76,69 @@ final class FacebookService
         return ['success' => true, 'message' => 'Comment submitted to Facebook.'];
     }
 
+    public function checkCookieStatus(): array
+    {
+        if (!$this->cookies->exists()) {
+            return [
+                'status' => 'missing',
+                'label' => 'Belum ada cookie',
+                'message' => 'Cookie Facebook belum disimpan.',
+            ];
+        }
+
+        $baseUrl = rtrim($this->settings->string('facebook_base_url', config('config.facebook.base_url')), '/');
+        $response = CurlHelper::request($baseUrl . '/home.php', [
+            'cookie_file' => $this->cookies->path(),
+            'user_agent' => $this->randomizer->userAgent(),
+            'timeout' => 15,
+        ]);
+
+        if (!$response['ok']) {
+            return [
+                'status' => 'error',
+                'label' => 'Tidak bisa dicek',
+                'message' => $response['error'] ?: 'HTTP ' . $response['status'],
+            ];
+        }
+
+        if ($this->looksCheckpoint($response['body'])) {
+            return [
+                'status' => 'checkpoint',
+                'label' => 'Checkpoint',
+                'message' => 'Akun Facebook terkena checkpoint atau verifikasi.',
+            ];
+        }
+
+        if ($this->looksLoggedOut($response['body'])) {
+            return [
+                'status' => 'expired',
+                'label' => 'Expired',
+                'message' => 'Cookie sudah tidak login. Simpan cookie baru.',
+            ];
+        }
+
+        return [
+            'status' => 'active',
+            'label' => 'Aktif',
+            'message' => 'Cookie masih bisa membuka halaman Facebook.',
+        ];
+    }
+
     private function looksLoggedOut(string $html): bool
     {
         $needle = strtolower($html);
         return str_contains($needle, 'name="email"')
             && str_contains($needle, 'name="pass"')
             && (str_contains($needle, 'login') || str_contains($needle, 'checkpoint'));
+    }
+
+    private function looksCheckpoint(string $html): bool
+    {
+        $needle = strtolower($html);
+        return str_contains($needle, 'checkpoint')
+            || str_contains($needle, 'two-factor')
+            || str_contains($needle, 'approvals_code')
+            || str_contains($needle, 'security check');
     }
 
     private function extractPosts(string $html, string $sourceUrl): array

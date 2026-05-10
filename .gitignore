@@ -1,0 +1,34 @@
+# Environment and secrets
+AI_CONTRACT.md
+.env
+.env.*
+!.env.example
+
+# Composer dependencies
+vendor/
+composer.lock
+
+# Runtime storage
+storage/logs/*
+storage/cache/*
+storage/cookies/*
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+!storage/cookies/.gitkeep
+
+# User uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+*.swp

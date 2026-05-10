@@ -9,6 +9,7 @@ use App\models\BotStatus;
 use App\models\Post;
 use App\services\CommentService;
 use App\services\CookieService;
+use App\services\FacebookService;
 
 final class BotController extends Controller
 {
@@ -19,6 +20,7 @@ final class BotController extends Controller
             'stats' => (new Post())->stats(),
             'statuses' => (new BotStatus())->all(),
             'cookieExists' => (new CookieService())->exists(),
+            'cookieStatus' => (new FacebookService())->checkCookieStatus(),
         ]);
     }
 

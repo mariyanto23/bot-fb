@@ -56,7 +56,21 @@
         <section class="panel">
             <div class="panel-header d-flex justify-content-between align-items-center">
                 <h2 class="h5 mb-0">Facebook Cookie</h2>
-                <span class="badge <?= $cookieExists ? 'text-bg-success' : 'text-bg-danger' ?>"><?= $cookieExists ? 'Saved' : 'Missing' ?></span>
+                <?php
+                $cookieBadgeClass = match ($cookieStatus['status'] ?? 'missing') {
+                    'active' => 'text-bg-success',
+                    'checkpoint' => 'text-bg-warning',
+                    'expired', 'missing' => 'text-bg-danger',
+                    default => 'text-bg-secondary',
+                };
+                ?>
+                <span class="badge <?= e($cookieBadgeClass) ?>"><?= e($cookieStatus['label'] ?? 'Belum dicek') ?></span>
+            </div>
+            <div class="alert alert-secondary py-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-check"></i>
+                    <span><?= e($cookieStatus['message'] ?? 'Status cookie belum tersedia.') ?></span>
+                </div>
             </div>
             <form method="post" action="<?= e(url('/bot/cookie')) ?>">
                 <?= Csrf::field() ?>
