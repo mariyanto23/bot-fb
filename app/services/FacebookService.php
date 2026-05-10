@@ -22,7 +22,8 @@ final class FacebookService
     {
         $response = CurlHelper::request($target['source_url'], [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->userAgent(),
+            'user_agent' => $this->randomizer->facebookUserAgent(),
+            'headers' => $this->facebookHeaders(),
         ]);
 
         $this->lastFetchDebug = [
@@ -56,7 +57,8 @@ final class FacebookService
     {
         $page = CurlHelper::request($post['post_url'], [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->userAgent(),
+            'user_agent' => $this->randomizer->facebookUserAgent(),
+            'headers' => $this->facebookHeaders(),
         ]);
 
         if (!$page['ok']) {
@@ -78,9 +80,9 @@ final class FacebookService
 
         $response = CurlHelper::request($form['action'], [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->userAgent(),
+            'user_agent' => $this->randomizer->facebookUserAgent(),
             'post' => http_build_query($payload),
-            'headers' => ['Content-Type: application/x-www-form-urlencoded'],
+            'headers' => array_merge($this->facebookHeaders(), ['Content-Type: application/x-www-form-urlencoded']),
         ]);
 
         if (!$response['ok']) {
@@ -107,7 +109,8 @@ final class FacebookService
         $baseUrl = rtrim($this->settings->string('facebook_base_url', config('config.facebook.base_url')), '/');
         $response = CurlHelper::request($baseUrl . '/home.php', [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->userAgent(),
+            'user_agent' => $this->randomizer->facebookUserAgent(),
+            'headers' => $this->facebookHeaders(),
             'timeout' => 15,
         ]);
 
@@ -280,6 +283,16 @@ final class FacebookService
         }
 
         return 'unknown';
+    }
+
+    private function facebookHeaders(): array
+    {
+        return [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language: id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache',
+        ];
     }
 
     private function absoluteUrl(string $href, string $host): string
