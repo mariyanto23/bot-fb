@@ -1,0 +1,99 @@
+:root {
+    color-scheme: dark;
+}
+
+body {
+    min-height: 100vh;
+    background: #111418;
+}
+
+.auth-body {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    background: #101418;
+}
+
+.auth-shell {
+    width: min(420px, calc(100vw - 32px));
+}
+
+.auth-panel,
+.panel,
+.metric {
+    background: #181d23;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.panel-header {
+    margin-bottom: 18px;
+}
+
+.metric {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 96px;
+}
+
+.metric-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 8px;
+    background: #233244;
+    color: #8ec5ff;
+    font-size: 22px;
+}
+
+.metric-value {
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+.app-toast {
+    position: fixed;
+    top: 76px;
+    right: 20px;
+    z-index: 1080;
+}
+
+.table-long {
+    max-width: 520px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.table-url {
+    max-width: 520px;
+    overflow-wrap: anywhere;
+}
+
+.nav-link.active {
+    color: #8ec5ff !important;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+@media (max-width: 575.98px) {
+    .panel,
+    .metric {
+        padding: 16px;
+    }
+
+    .metric-value {
+        font-size: 24px;
+    }
+
+    .app-toast {
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+}

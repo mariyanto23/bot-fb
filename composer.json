@@ -1,0 +1,27 @@
+{
+    "name": "fb-affiliate/comment-bot",
+    "description": "Native PHP MVC Facebook affiliate comment automation dashboard for shared hosting.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/helpers/functions.php"
+        ]
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@php -r \"foreach (['storage/logs','storage/cache','storage/cookies','public/uploads'] as $d) { if (!is_dir($d)) mkdir($d, 0775, true); }\""
+        ],
+        "check-syntax": "php -r \"foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator('.')) as $file) { if ($file->isFile() && $file->getExtension() === 'php' && strpos($file->getPathname(), DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) === false) passthru('php -l ' . escapeshellarg($file->getPathname()), $code); }\""
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
