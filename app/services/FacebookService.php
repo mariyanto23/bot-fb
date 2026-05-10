@@ -275,7 +275,7 @@ final class FacebookService
 
     private function pageHint(string $html): string
     {
-        $plain = strtolower(trim(preg_replace('/\s+/', ' ', strip_tags($html))));
+        $plain = strtolower($this->cleanPageText($html));
 
         if ($this->looksCheckpoint($html)) {
             return 'checkpoint';
@@ -286,6 +286,8 @@ final class FacebookService
         }
 
         foreach ([
+            'kesalahan' => 'facebook_error',
+            'error' => 'facebook_error',
             'staticcontentonly' => 'browser_interstitial',
             'gunakan aplikasi facebook' => 'browser_interstitial',
             'use the facebook app' => 'browser_interstitial',
@@ -309,8 +311,17 @@ final class FacebookService
 
     private function pageTextSample(string $html): string
     {
-        $plain = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
-        return mb_substr($plain, 0, 500);
+        return mb_substr($this->cleanPageText($html), 0, 700);
+    }
+
+    private function cleanPageText(string $html): string
+    {
+        $html = preg_replace('~<script\b[^>]*>.*?</script>~is', ' ', $html) ?? $html;
+        $html = preg_replace('~<style\b[^>]*>.*?</style>~is', ' ', $html) ?? $html;
+        $html = preg_replace('~<noscript\b[^>]*>.*?</noscript>~is', ' ', $html) ?? $html;
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return trim(preg_replace('/\s+/', ' ', $text) ?? $text);
     }
 
     private function targetUrlVariants(string $sourceUrl): array
