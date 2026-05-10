@@ -286,6 +286,11 @@ final class FacebookService
         }
 
         foreach ([
+            'staticcontentonly' => 'browser_interstitial',
+            'gunakan aplikasi facebook' => 'browser_interstitial',
+            'use the facebook app' => 'browser_interstitial',
+            'action=app_android' => 'browser_interstitial',
+            'action=app_ios' => 'browser_interstitial',
             'gabung ke grup' => 'join_group',
             'join group' => 'join_group',
             'konten ini tidak tersedia' => 'content_unavailable',

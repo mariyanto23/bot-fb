@@ -12,9 +12,10 @@ final class RandomizerService
     ];
 
     private array $facebookUserAgents = [
-        'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (Linux; U; Android 8.1.0; en-US; Mobile) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
+        'NokiaC3-00/5.0 (08.63) Profile/MIDP-2.1 Configuration/CLDC-1.1',
+        'Mozilla/5.0 (Series40; Nokia501/10.0.2) Profile/MIDP-2.1 Configuration/CLDC-1.1',
+        'Opera/9.80 (J2ME/MIDP; Opera Mini/4.5.33867/191.249; U; en) Presto/2.12.423 Version/12.16',
+        'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)',
     ];
 
     public function delaySeconds(?int $min = null, ?int $max = null): int
