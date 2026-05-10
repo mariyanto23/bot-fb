@@ -20,32 +20,48 @@ final class FacebookService
 
     public function fetchPostsFromTarget(array $target): array
     {
-        $response = CurlHelper::request($target['source_url'], [
-            'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->facebookUserAgent(),
-            'headers' => $this->facebookHeaders(),
-        ]);
+        $attempts = [];
 
-        $this->lastFetchDebug = [
-            'http_status' => $response['status'],
-            'effective_url' => $response['info']['url'] ?? $target['source_url'],
-            'body_size' => strlen((string) $response['body']),
-            'link_count' => 0,
-            'candidate_count' => 0,
-            'page_hint' => $this->pageHint($response['body']),
-            'sample_links' => [],
-            'sample_candidates' => [],
-        ];
+        foreach ($this->targetUrlVariants((string) $target['source_url']) as $url) {
+            $response = CurlHelper::request($url, [
+                'cookie_file' => $this->cookies->path(),
+                'user_agent' => $this->randomizer->facebookUserAgent(),
+                'headers' => $this->facebookHeaders(),
+            ]);
 
-        if (!$response['ok']) {
-            throw new \RuntimeException('Facebook fetch failed: ' . ($response['error'] ?: 'HTTP ' . $response['status']));
+            $this->lastFetchDebug = [
+                'requested_url' => $url,
+                'http_status' => $response['status'],
+                'effective_url' => $response['info']['url'] ?? $url,
+                'body_size' => strlen((string) $response['body']),
+                'link_count' => 0,
+                'candidate_count' => 0,
+                'page_hint' => $this->pageHint($response['body']),
+                'page_text_sample' => $this->pageTextSample($response['body']),
+                'sample_links' => [],
+                'sample_candidates' => [],
+            ];
+
+            if (!$response['ok']) {
+                $attempts[] = $this->lastFetchDebug + ['error' => $response['error'] ?: 'HTTP ' . $response['status']];
+                continue;
+            }
+
+            if ($this->looksLoggedOut($response['body'])) {
+                throw new \RuntimeException('Facebook cookie is expired or not authenticated.');
+            }
+
+            $posts = $this->extractPosts($response['body'], $url);
+            $attempts[] = $this->lastFetchDebug;
+
+            if ($posts !== []) {
+                $this->lastFetchDebug['attempts'] = $attempts;
+                return $posts;
+            }
         }
 
-        if ($this->looksLoggedOut($response['body'])) {
-            throw new \RuntimeException('Facebook cookie is expired or not authenticated.');
-        }
-
-        return $this->extractPosts($response['body'], (string) $target['source_url']);
+        $this->lastFetchDebug['attempts'] = $attempts;
+        return [];
     }
 
     public function lastFetchDebug(): array
@@ -224,6 +240,7 @@ final class FacebookService
         return str_contains($href, 'story_fbid=')
             || str_contains($href, 'multi_permalinks=')
             || str_contains($href, 'ft_ent_identifier=')
+            || str_contains($href, 'view=permalink')
             || str_contains($href, '/posts/')
             || str_contains($href, '/permalink/')
             || str_contains($href, '/permalink.php')
@@ -283,6 +300,36 @@ final class FacebookService
         }
 
         return 'unknown';
+    }
+
+    private function pageTextSample(string $html): string
+    {
+        $plain = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
+        return mb_substr($plain, 0, 500);
+    }
+
+    private function targetUrlVariants(string $sourceUrl): array
+    {
+        $variants = [$sourceUrl];
+        $groupId = $this->extractGroupId($sourceUrl);
+
+        if ($groupId !== null) {
+            $variants[] = 'https://mbasic.facebook.com/groups/' . $groupId . '?view=group';
+            $variants[] = 'https://mbasic.facebook.com/groups/' . $groupId . '?sorting_setting=CHRONOLOGICAL';
+            $variants[] = 'https://mbasic.facebook.com/groups/' . $groupId . '?view=permalink';
+            $variants[] = 'https://m.facebook.com/groups/' . $groupId;
+        }
+
+        return array_values(array_unique($variants));
+    }
+
+    private function extractGroupId(string $sourceUrl): ?string
+    {
+        if (preg_match('~/groups/([^/?#]+)~', $sourceUrl, $matches) === 1) {
+            return preg_replace('/[^0-9A-Za-z._\-]/', '', $matches[1]);
+        }
+
+        return null;
     }
 
     private function facebookHeaders(): array
