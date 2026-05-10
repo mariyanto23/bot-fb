@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.js-table').forEach((table) => {
+        if (table.querySelector('tbody td[colspan]')) {
+            return;
+        }
+
         new DataTable(table, {
             responsive: true,
             pageLength: 25,
