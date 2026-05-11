@@ -25,7 +25,7 @@ final class FacebookService
         foreach ($this->targetUrlVariants((string) $target['source_url']) as $url) {
             $response = CurlHelper::request($url, [
                 'cookie_file' => $this->cookies->path(),
-                'user_agent' => $this->randomizer->facebookUserAgent(),
+                'user_agent' => $this->facebookUserAgent(),
                 'headers' => $this->facebookHeaders(),
             ]);
 
@@ -73,7 +73,7 @@ final class FacebookService
     {
         $page = CurlHelper::request($post['post_url'], [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->facebookUserAgent(),
+            'user_agent' => $this->facebookUserAgent(),
             'headers' => $this->facebookHeaders(),
         ]);
 
@@ -96,7 +96,7 @@ final class FacebookService
 
         $response = CurlHelper::request($form['action'], [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->facebookUserAgent(),
+            'user_agent' => $this->facebookUserAgent(),
             'post' => http_build_query($payload),
             'headers' => array_merge($this->facebookHeaders(), ['Content-Type: application/x-www-form-urlencoded']),
         ]);
@@ -125,7 +125,7 @@ final class FacebookService
         $baseUrl = rtrim($this->settings->string('facebook_base_url', config('config.facebook.base_url')), '/');
         $response = CurlHelper::request($baseUrl . '/home.php', [
             'cookie_file' => $this->cookies->path(),
-            'user_agent' => $this->randomizer->facebookUserAgent(),
+            'user_agent' => $this->facebookUserAgent(),
             'headers' => $this->facebookHeaders(),
             'timeout' => 15,
         ]);
@@ -286,6 +286,10 @@ final class FacebookService
         }
 
         foreach ([
+            'facebook tidak tersedia di browser ini' => 'unsupported_browser',
+            'facebook tidak tersedia di perangkat ini' => 'unsupported_browser',
+            'facebook is not available on this browser' => 'unsupported_browser',
+            'facebook is not available on this device' => 'unsupported_browser',
             'kesalahan' => 'facebook_error',
             'error' => 'facebook_error',
             'staticcontentonly' => 'browser_interstitial',
@@ -334,6 +338,7 @@ final class FacebookService
             $variants[] = 'https://mbasic.facebook.com/groups/' . $groupId . '?sorting_setting=CHRONOLOGICAL';
             $variants[] = 'https://mbasic.facebook.com/groups/' . $groupId . '?view=permalink';
             $variants[] = 'https://m.facebook.com/groups/' . $groupId;
+            $variants[] = 'https://www.facebook.com/groups/' . $groupId;
         }
 
         return array_values(array_unique($variants));
@@ -356,6 +361,12 @@ final class FacebookService
             'Cache-Control: no-cache',
             'Pragma: no-cache',
         ];
+    }
+
+    private function facebookUserAgent(): string
+    {
+        $configured = $this->settings->string('facebook_user_agent', config('config.facebook.user_agent', ''));
+        return $configured !== '' ? $configured : $this->randomizer->facebookUserAgent();
     }
 
     private function absoluteUrl(string $href, string $host): string

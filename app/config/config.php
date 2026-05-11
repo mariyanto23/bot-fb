@@ -14,6 +14,7 @@ return [
         'base_url' => rtrim((string) env('FACEBOOK_BASE_URL', 'https://mbasic.facebook.com'), '/'),
         'comment_endpoint' => env('FACEBOOK_COMMENT_ENDPOINT', 'https://mbasic.facebook.com/a/comment.php'),
         'cookie_file' => base_path((string) env('FACEBOOK_COOKIE_FILE', 'storage/cookies/facebook.cookie')),
+        'user_agent' => env('FACEBOOK_USER_AGENT', ''),
     ],
     'telegram' => [
         'enabled' => env_bool('TELEGRAM_ENABLED', false),

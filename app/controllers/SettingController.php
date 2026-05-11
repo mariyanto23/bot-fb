@@ -16,6 +16,7 @@ final class SettingController extends Controller
         'bot_max_delay_seconds',
         'bot_cooldown_seconds',
         'facebook_base_url',
+        'facebook_user_agent',
         'telegram_enabled',
         'telegram_bot_token',
         'telegram_chat_id',

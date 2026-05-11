@@ -42,6 +42,10 @@ $value = static fn (string $key, mixed $default = ''): string => (string) ($sett
                         <label class="form-label">Facebook Base URL</label>
                         <input class="form-control" name="facebook_base_url" type="url" value="<?= e($value('facebook_base_url', config('config.facebook.base_url'))) ?>">
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">Facebook User-Agent</label>
+                        <textarea class="form-control" name="facebook_user_agent" rows="3" spellcheck="false"><?= e($value('facebook_user_agent', config('config.facebook.user_agent', ''))) ?></textarea>
+                    </div>
                 </div>
             </section>
         </div>
